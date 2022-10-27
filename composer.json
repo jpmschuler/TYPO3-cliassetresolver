@@ -1,0 +1,118 @@
+{
+	"name": "jpmschuler/cliassetresolver",
+	"description": "",
+	"license": [
+		"GPL-2.0+"
+	],
+	"type": "typo3-cms-extension",
+	"version": "v0.1.0-alpha.0",
+	"authors": [
+		{
+			"name": "J. Peter M. Schuler",
+			"email": "j.peter.m.schuler@uni-due.de",
+			"role": "Developer"
+		}
+	],
+	"require": {
+		"php": "^7.4 || ^8.0",
+    "typo3/cms-composer-installers": "*@dev"
+	},
+	"require-dev": {
+		"ergebnis/composer-normalize": "^2.19.0",
+		"friendsofphp/php-cs-fixer": "^3.4.0",
+		"helmich/typo3-typoscript-lint": "^2.5.2",
+		"jangregor/phpstan-prophecy": "^1.0.0",
+		"phpstan/extension-installer": "^1.1.0",
+		"phpstan/phpstan": "^1.6.2",
+		"rector/rector": "0.13.4",
+		"saschaegerer/phpstan-typo3": "^1.1.2",
+		"seld/jsonlint": "^1.9.0",
+		"squizlabs/php_codesniffer": "^3.6.2",
+		"symfony/yaml": "^4.4.29 || ^5.3.6 || ^6.0"
+	},
+	"autoload": {
+		"psr-4": {
+			"Jpmschuler\\CliAssetResolver\\": "Classes/"
+		}
+	},
+	"config": {
+		"allow-plugins": {
+			"typo3/class-alias-loader": true,
+			"typo3/cms-composer-installers": true,
+			"bk2k/configuration-installer": true,
+			"ergebnis/composer-normalize": true,
+			"phpstan/extension-installer": true
+		},
+		"app-dir": ".Build",
+		"bin-dir": ".Build/bin",
+		"sort-packages": true,
+		"vendor-dir": ".Build/vendor"
+	},
+	"extra": {
+		"phpstan": {
+			"level": 5
+		},
+		"typo3/cms": {
+			"app-dir": ".Build",
+			"extension-key": "tvplus_contentslide",
+			"web-dir": ".Build/public"
+		}
+	},
+	"scripts": {
+		"check": [
+			"@check:all"
+		],
+		"check:all": [
+			"@check:php",
+			"@check:php-cs-fixer:dry-run",
+			"@check:phpcs:dry-run",
+			"@check:phpstan"
+		],
+		"check:php": "find *.php Classes  -name '*.php' -print0 | xargs -0 -n 1 -P 4 php -l",
+		"check:php-cs-fixer": "php-cs-fixer fix",
+		"check:php-cs-fixer:dry-run": "php-cs-fixer fix --dry-run --using-cache=no --diff",
+		"check:php:podman": "@check:php:podman:all",
+		"check:php:podman:all": [
+			"@check:php:podman:php73",
+			"@check:php:podman:php74",
+			"@check:php:podman:php80",
+			"@check:php:podman:php81"
+		],
+		"check:php:podman:php73": "podman run --rm -it -v $(pwd):/data thecodingmachine/php:7.3-v4-slim-cli /bin/bash -c \"cd /data; composer run check:php\"",
+		"check:php:podman:php74": "podman run --rm -it -v $(pwd):/data thecodingmachine/php:7.4-v4-slim-cli /bin/bash -c \"cd /data; composer run check:php\"",
+		"check:php:podman:php80": "podman run --rm -it -v $(pwd):/data thecodingmachine/php:8.0-v4-slim-cli /bin/bash -c \"cd /data; composer run check:php\"",
+		"check:php:podman:php81": "podman run --rm -it -v $(pwd):/data thecodingmachine/php:8.1-v4-slim-cli /bin/bash -c \"cd /data; composer run check:php\"",
+		"check:phpcbf": "phpcbf Classes",
+		"check:phpcs": "@check:phpcbf",
+		"check:phpcs:dry-run": "phpcs Classes",
+		"check:phpsniff:failOnWarnings": "phpcs Classes ",
+		"check:phpstan": "phpstan --level=$(composer config extra.phpstan.level 2> /dev/null || echo 5) --memory-limit=1G analyse",
+		"check:phpstan:ci": "phpstan --level=$(composer config extra.phpstan.level 2> /dev/null || echo 5) --memory-limit=1G --no-progress --error-format gitlab analyse > report.phpstan.json",
+		"check:phpstan:generateBaseline": "phpstan --level=$(composer config extra.phpstan.level 2> /dev/null || echo 5) --memory-limit=1G --generate-baseline=phpstan-baseline.neon analyse",
+		"check:typoscript": "typoscript-lint",
+		"codequality": [
+			"@check:php-cs-fixer",
+			"@check:all",
+			"@rector:dry-run"
+		],
+		"codequality:autofix": [
+			"@check:php-cs-fixer",
+			"@check:phpcbf",
+			"@rector"
+		],
+		"lint": [
+			"@check:php",
+			"@check:php-cs-fixer:dry-run"
+		],
+		"pretest:deprecations": [
+			"mkdir -p .Build/$(composer config extra.typo3/cms.extension-key)",
+			"rsync -ah --delete --exclude=node_modules --exclude=.* . .Build/$(composer config extra.typo3/cms.extension-key)"
+		],
+		"rector": "rector process -- .",
+		"rector:dry-run": "rector process --dry-run --  .",
+		"rector:dry-run:ci": "rector process --dry-run --output-format json -- . > report.rector.json",
+		"test": [
+			"@check:all"
+		]
+	}
+}

@@ -1,0 +1,12 @@
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+    public: false
+
+  JpmSchuler\CliAssetResolver\Command\GetAssetFolder:
+    public: true
+    tags:
+      - name: 'console.command'
+        command: 'getAssetFolder'
+        schedulable: false
